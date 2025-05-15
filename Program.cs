@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Windows.Forms;
-using TransaksiApp;
+using UCP1;
 
 namespace UCP1
 {

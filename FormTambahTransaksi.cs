@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Data;
 using System.Data.SqlClient;
-using System.Windows.Forms;
 using System.Drawing;
+using System.Windows.Forms;
 
-namespace TransaksiApp
+namespace UCP1
 {
     public partial class FormTambahTransaksi : Form
     {
@@ -15,6 +15,47 @@ namespace TransaksiApp
         {
             InitializeComponent();
             dataGridView1.CellClick += dataGridView1_CellClick;
+
+
+            button1.Text = "Lihat Laporan";
+            button1.BackColor = Color.LightGreen;
+            button1.Font = new Font("Arial", 9, FontStyle.Bold);
+            button1.Click += BtnLihatLaporan_Click;
+        }
+
+        private void BtnLihatLaporan_Click(object sender, EventArgs e)
+        {
+            try
+            {
+
+                button1.BackColor = Color.Lime;
+                button1.Refresh();
+
+
+                TampilkanLaporan();
+
+
+                Timer timer = new Timer { Interval = 300 };
+                timer.Tick += (s, args) =>
+                {
+                    button1.BackColor = Color.LightGreen;
+                    timer.Stop();
+                    timer.Dispose();
+                };
+                timer.Start();
+
+
+                if (dataGridView1.Rows.Count > 0)
+                {
+                    dataGridView1.FirstDisplayedScrollingRowIndex = dataGridView1.Rows.Count - 1;
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Gagal memuat laporan: {ex.Message}", "Error",
+                              MessageBoxButtons.OK, MessageBoxIcon.Error);
+                button1.BackColor = Color.Salmon;
+            }
         }
 
         private void FormTambahTransaksi_Load(object sender, EventArgs e)
@@ -22,20 +63,37 @@ namespace TransaksiApp
             comboBox1.Items.Add("pemasukan");
             comboBox1.Items.Add("pengeluaran");
             comboBox1.SelectedIndex = 0;
+            dateTimePicker1.MinDate = new DateTime(2020, 1, 1);
+
             TampilkanLaporan();
         }
 
         private void btnSimpan_Click(object sender, EventArgs e)
         {
             string nama = textBox1.Text;
-            decimal jumlah = Convert.ToDecimal(textBox2.Text);
+            string jumlahText = textBox2.Text.Trim(); 
             string keterangan = textBox3.Text;
             DateTime tanggal = dateTimePicker1.Value;
             string tipe = comboBox1.SelectedItem.ToString();
 
-            if (string.IsNullOrWhiteSpace(nama) || jumlah <= 0)
+            // Validasi nama: hanya huruf dan spasi
+            if (string.IsNullOrWhiteSpace(nama) || !System.Text.RegularExpressions.Regex.IsMatch(nama, @"^[a-zA-Z\s]+$"))
             {
-                MessageBox.Show("Nama dan jumlah harus diisi dengan benar.");
+                MessageBox.Show("Nama kategori harus terdiri dari huruf saja.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Validasi jumlah
+            decimal jumlah;
+            if (!decimal.TryParse(jumlahText, out jumlah) || jumlah <= 0)
+            {
+                MessageBox.Show("Jumlah harus berupa angka yang lebih dari 0.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            if (tanggal.Year < 2020)
+            {
+                MessageBox.Show("Tahun tidak boleh sebelum tahun 2020.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
@@ -84,13 +142,11 @@ namespace TransaksiApp
         {
             try
             {
-                
                 if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
 
                 string columnName = dataGridView1.Columns[e.ColumnIndex].Name;
                 if (columnName != "Update" && columnName != "Delete") return;
 
-                
                 var idValue = dataGridView1.Rows[e.RowIndex].Cells["id_transaksi"].Value;
                 if (idValue == DBNull.Value || idValue == null || idValue.ToString() == "") return;
 
@@ -98,12 +154,10 @@ namespace TransaksiApp
 
                 if (columnName == "Update")
                 {
-                    
                     textBox1.Text = dataGridView1.Rows[e.RowIndex].Cells["nama_kategori"].Value.ToString();
                     comboBox1.SelectedItem = dataGridView1.Rows[e.RowIndex].Cells["tipe"].Value.ToString();
                     textBox2.Text = dataGridView1.Rows[e.RowIndex].Cells["jumlah"].Value.ToString();
                     textBox3.Text = dataGridView1.Rows[e.RowIndex].Cells["keterangan"].Value.ToString();
-                    dateTimePicker1.Value = Convert.ToDateTime(dataGridView1.Rows[e.RowIndex].Cells["tanggal"].Value);
                     idEdit = idTransaksi;
                 }
                 else if (columnName == "Delete")
@@ -136,13 +190,15 @@ namespace TransaksiApp
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
+                    string query = @"SELECT id_transaksi, nama_kategori, tipe, jumlah, 
+                                   CONVERT(varchar, tanggal, 103) as tanggal, keterangan 
+                                   FROM view_transaksi_lengkap 
+                                   ORDER BY tanggal DESC";
 
-                    string query = "SELECT id_transaksi, nama_kategori, tipe, jumlah, tanggal, keterangan FROM view_transaksi_lengkap ORDER BY tanggal DESC";
                     SqlDataAdapter adapter = new SqlDataAdapter(query, conn);
                     DataTable dt = new DataTable();
                     adapter.Fill(dt);
 
-                    
                     decimal totalPemasukan = 0, totalPengeluaran = 0;
                     foreach (DataRow row in dt.Rows)
                     {
@@ -152,110 +208,100 @@ namespace TransaksiApp
                             totalPengeluaran += Convert.ToDecimal(row["jumlah"]);
                     }
 
-                    
                     DataRow totalRow = dt.NewRow();
                     totalRow["nama_kategori"] = "TOTAL";
-                    totalRow["tipe"] = "";
+                    totalRow["tipe"] = DBNull.Value;
                     totalRow["jumlah"] = DBNull.Value;
+                    totalRow["tanggal"] = DBNull.Value;
                     totalRow["keterangan"] = $"Pemasukan: Rp{totalPemasukan:N0} | Pengeluaran: Rp{totalPengeluaran:N0} | Saldo: Rp{(totalPemasukan - totalPengeluaran):N0}";
                     dt.Rows.Add(totalRow);
 
-                    
-                    dataGridView1.DataSource = null;
-                    dataGridView1.Columns.Clear();
-                    dataGridView1.AutoGenerateColumns = false;
-
-                    
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "id_transaksi",
-                        HeaderText = "ID",
-                        Name = "id_transaksi",
-                        Visible = false 
-                    });
-
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "nama_kategori",
-                        HeaderText = "Kategori",
-                        Name = "nama_kategori"
-                    });
-
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "tipe",
-                        HeaderText = "Jenis",
-                        Name = "tipe"
-                    });
-
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "jumlah",
-                        HeaderText = "Jumlah",
-                        Name = "jumlah",
-                        DefaultCellStyle = new DataGridViewCellStyle() { Format = "N0" }
-                    });
-
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "tanggal",
-                        HeaderText = "Tanggal",
-                        Name = "tanggal",
-                        DefaultCellStyle = new DataGridViewCellStyle() { Format = "dd/MM/yyyy" }
-                    });
-
-                    dataGridView1.Columns.Add(new DataGridViewTextBoxColumn()
-                    {
-                        DataPropertyName = "keterangan",
-                        HeaderText = "Keterangan",
-                        Name = "keterangan"
-                    });
-
-                   
-                    DataGridViewButtonColumn btnUpdate = new DataGridViewButtonColumn()
-                    {
-                        HeaderText = "Aksi",
-                        Name = "Update",
-                        Text = "Update",
-                        UseColumnTextForButtonValue = true,
-                        FlatStyle = FlatStyle.Flat,
-                        DefaultCellStyle = new DataGridViewCellStyle()
-                        {
-                            BackColor = Color.LightBlue,
-                            ForeColor = Color.Black
-                        }
-                    };
-
-                    DataGridViewButtonColumn btnDelete = new DataGridViewButtonColumn()
-                    {
-                        Name = "Delete",
-                        Text = "Delete",
-                        UseColumnTextForButtonValue = true,
-                        FlatStyle = FlatStyle.Flat,
-                        DefaultCellStyle = new DataGridViewCellStyle()
-                        {
-                            BackColor = Color.LightCoral,
-                            ForeColor = Color.Black
-                        }
-                    };
-
-                    dataGridView1.Columns.Add(btnUpdate);
-                    dataGridView1.Columns.Add(btnDelete);
-
-                    
-                    dataGridView1.DataSource = dt;
-
-                    
-                    dataGridView1.ColumnHeadersDefaultCellStyle.Font = new Font("Arial", 9, FontStyle.Bold);
-                    dataGridView1.EnableHeadersVisualStyles = false;
-                    dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.LightGray;
-                    dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-                    dataGridView1.RowHeadersVisible = false;
+                    SetupDataGridView(dt);
                 }
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error saat menampilkan laporan: {ex.Message}");
+            }
+        }
+
+        private void SetupDataGridView(DataTable dt)
+        {
+
+            dataGridView1.DataSource = null;
+            dataGridView1.Columns.Clear();
+            dataGridView1.AutoGenerateColumns = false;
+
+
+            AddColumn("id_transaksi", "ID", false);
+            AddColumn("nama_kategori", "Kategori");
+            AddColumn("tipe", "Jenis");
+            AddColumn("jumlah", "Jumlah", true, "N0", DataGridViewContentAlignment.MiddleRight);
+            AddColumn("tanggal", "Tanggal");
+            AddColumn("keterangan", "Keterangan");
+
+
+            AddButtonColumn("Update", "Update", Color.LightBlue);
+            AddButtonColumn("Delete", "Delete", Color.LightCoral);
+
+
+            dataGridView1.DataSource = dt;
+
+
+            FormatGridAppearance();
+        }
+
+        private void AddColumn(string name, string headerText, bool visible = true,
+                             string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleLeft)
+        {
+            var col = new DataGridViewTextBoxColumn
+            {
+                Name = name,
+                DataPropertyName = name,
+                HeaderText = headerText,
+                Visible = visible,
+                DefaultCellStyle = new DataGridViewCellStyle { Alignment = alignment }
+            };
+
+            if (!string.IsNullOrEmpty(format))
+                col.DefaultCellStyle.Format = format;
+
+            dataGridView1.Columns.Add(col);
+        }
+
+        private void AddButtonColumn(string name, string text, Color backColor)
+        {
+            var btnCol = new DataGridViewButtonColumn
+            {
+                Name = name,
+                Text = text,
+                HeaderText = "Aksi",
+                UseColumnTextForButtonValue = true,
+                FlatStyle = FlatStyle.Flat,
+                DefaultCellStyle = new DataGridViewCellStyle
+                {
+                    BackColor = backColor,
+                    ForeColor = Color.Black,
+                    Alignment = DataGridViewContentAlignment.MiddleCenter
+                }
+            };
+            dataGridView1.Columns.Add(btnCol);
+        }
+
+        private void FormatGridAppearance()
+        {
+            dataGridView1.ColumnHeadersDefaultCellStyle.Font = new Font("Arial", 9, FontStyle.Bold);
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.LightGray;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridView1.RowHeadersVisible = false;
+
+
+            if (dataGridView1.Rows.Count > 0)
+            {
+                var lastRow = dataGridView1.Rows[dataGridView1.Rows.Count - 1];
+                lastRow.DefaultCellStyle.Font = new Font(dataGridView1.Font, FontStyle.Bold);
+                lastRow.DefaultCellStyle.BackColor = Color.LightGray;
             }
         }
 

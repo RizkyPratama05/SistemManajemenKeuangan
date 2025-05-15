@@ -1,4 +1,4 @@
-﻿namespace TransaksiApp
+﻿namespace UCP1
 {
     partial class FormTambahTransaksi
     {
@@ -38,9 +38,10 @@
             this.dtTanggal1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.button1 = new System.Windows.Forms.Button();
+            this.button2 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.button2 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -123,6 +124,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.button2);
             this.groupBox1.Controls.Add(this.textBox3);
             this.groupBox1.Controls.Add(this.label1);
@@ -139,6 +141,25 @@
             this.groupBox1.TabIndex = 13;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Transaksi";
+            // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(74, 416);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(121, 28);
+            this.button1.TabIndex = 12;
+            this.button1.Text = "Lihat Laporan";
+            this.button1.UseVisualStyleBackColor = true;
+            // 
+            // button2
+            // 
+            this.button2.Location = new System.Drawing.Point(74, 371);
+            this.button2.Name = "button2";
+            this.button2.Size = new System.Drawing.Size(121, 28);
+            this.button2.TabIndex = 11;
+            this.button2.Text = "Simpan";
+            this.button2.UseVisualStyleBackColor = true;
+            this.button2.Click += new System.EventHandler(this.btnSimpan_Click);
             // 
             // groupBox2
             // 
@@ -160,20 +181,11 @@
             this.dataGridView1.Size = new System.Drawing.Size(768, 513);
             this.dataGridView1.TabIndex = 0;
             // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(74, 371);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(121, 28);
-            this.button2.TabIndex = 11;
-            this.button2.Text = "Simpan";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.btnSimpan_Click);
-            // 
             // FormTambahTransaksi
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.Color.SlateGray;
             this.ClientSize = new System.Drawing.Size(1099, 581);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -202,5 +214,6 @@
         private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button button2;
+        private System.Windows.Forms.Button button1;
     }
 }
