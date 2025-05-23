@@ -93,9 +93,17 @@ namespace UCP1
 
             if (tanggal.Year < 2020)
             {
-                MessageBox.Show("Tahun tidak boleh sebelum tahun 2020.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Data hanya berlaku untuk tahun 2020 ke atas.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            var confirmSave = MessageBox.Show("Apakah Anda akan menyimpan data ini?",
+                                  "Konfirmasi Simpan",
+                                  MessageBoxButtons.YesNo,
+                                  MessageBoxIcon.Question);
+            if (confirmSave != DialogResult.Yes)
+                return;
+
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
@@ -121,6 +129,9 @@ namespace UCP1
                 }
                 else
                 {
+
+                 
+
                     string updateTransaksi = "UPDATE transaksi SET jumlah=@jumlah, tanggal=@tanggal, keterangan=@keterangan WHERE id_transaksi=@id";
                     SqlCommand cmdUpdate = new SqlCommand(updateTransaksi, conn);
                     cmdUpdate.Parameters.AddWithValue("@jumlah", jumlah);
@@ -154,6 +165,16 @@ namespace UCP1
 
                 if (columnName == "Update")
                 {
+
+                    var confirmUpdate = MessageBox.Show("Apakah Anda yakin ingin mengupdate data ini?",
+                                       "Konfirmasi Update",
+                                       MessageBoxButtons.YesNo,
+                                       MessageBoxIcon.Question);
+                    if (confirmUpdate != DialogResult.Yes)
+                    {
+                        return;
+                    }
+
                     textBox1.Text = dataGridView1.Rows[e.RowIndex].Cells["nama_kategori"].Value.ToString();
                     comboBox1.SelectedItem = dataGridView1.Rows[e.RowIndex].Cells["tipe"].Value.ToString();
                     textBox2.Text = dataGridView1.Rows[e.RowIndex].Cells["jumlah"].Value.ToString();
