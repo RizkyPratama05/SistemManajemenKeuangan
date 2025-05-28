@@ -1,16 +1,27 @@
-﻿using System;
+﻿using NPOI.SS.UserModel;
+using NPOI.XSSF.UserModel;
+using System;
 using System.Data;
 using System.Data.SqlClient;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
+using System.Runtime.Caching;
+using System.Diagnostics;
 
 namespace UCP1
 {
     public partial class FormTambahTransaksi : Form
     {
         private int idEdit = -1;
-        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=A4;Integrated Security=True";
+        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=SisTemManajemenKeuangan;Integrated Security=True";
 
+        private readonly MemoryCache _cache = MemoryCache.Default;
+        private readonly CacheItemPolicy _policy = new CacheItemPolicy
+        {
+            AbsoluteExpiration = DateTimeOffset.Now.AddMinutes(5)
+        };
+        private const string CacheKey = "DataTransaksi";
         public FormTambahTransaksi()
         {
             InitializeComponent();
@@ -22,6 +33,111 @@ namespace UCP1
             button1.Font = new Font("Arial", 9, FontStyle.Bold);
             button1.Click += BtnLihatLaporan_Click;
         }
+
+        private void FormTambahTransaksi_Load(object sender, EventArgs e)
+        {
+            EnsureIndexes();
+            LoadData();
+        }
+
+        private void EnsureIndexes()
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+                var indexScript = @"
+                    IF EXISTS (SELECT * FROM sys.indexes WHERE name = N'idx_Kategori_TipeKategori')
+                    BEGIN
+                        IF EXISTS (SELECT * FROM sys.columns 
+                                   WHERE object_id = OBJECT_ID(N'dbo.Kategori') 
+                                   AND object_id = OBJECT_ID 'dbo.kategori')
+                        BEGIN
+                            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = N'idx_Kategori_TipeKategori')
+                                CREATE NONCLUSTERED INDEX idx_Kategori_TipeKategori ON dbo.kategori(tipe);
+                        END
+                    END
+
+                    IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = N'idx_Kategori_TipeKategori')
+                        CREATE NONCLUSTERED INDEX idx_Kategori_TeipeKategori ON dbo.Kategori(tipe);
+                ";
+
+                using (var cmd = new SqlCommand(indexScript, conn))
+                {
+                    cmd.ExecuteReader();
+                }
+            }
+        }
+
+        private void LoadData()
+        {
+            DataTable dt;
+            Stopwatch stopwatch = new Stopwatch();
+            int rowCount = 0;
+
+            if (_cache.Contains(CacheKey))
+            {
+                dt = _cache.Get(CacheKey) as DataTable;
+                rowCount = dt?.Rows.Count ?? 0;
+            }
+            else
+            {
+                dt = new DataTable();
+                stopwatch.Start(); // Mulai hitung waktu
+                using (var conn = new SqlConnection(connectionString))
+                {
+                    conn.Open();
+                    var query = @"
+                        SELECT t.id_transaksi, k.nama_kategori, k.tipe, t.jumlah, t.tanggal
+                        FROM transaksi t
+                        JOIN kategori k ON t.id_kategori = k.id_kategori
+                    WHERE k.tipe = 'pengeluaran'";
+                    var da = new SqlDataAdapter(query, conn);
+                    da.Fill(dt);
+                    rowCount = dt.Rows.Count;
+                }
+                stopwatch.Stop(); // Selesai hitung waktu
+                _cache.Add(CacheKey, dt, _policy);
+            }
+
+            dataGridView1.AutoGenerateColumns = true;
+            dataGridView1.DataSource = dt;
+
+            // Menampilkan informasi statistik
+            string stats = $"STATISTICS INFO:\n" +
+                           $"- Rows returned: {rowCount}\n" +
+                           $"- Elapsed Time: {stopwatch.ElapsedMilliseconds} ms";
+
+            MessageBox.Show(stats, "STATISTICS INFO");
+        }
+
+
+        private void AnalyzeQuery(string sqlQuery)
+        {
+            using (var conn = new SqlConnection(connectionString))
+            {
+                conn.InfoMessage += (s, e) => MessageBox.Show(e.Message, "STATISTICS INFO");
+
+                conn.Open();
+
+                // Gabungkan query statistik dan query utama
+                var wrapped = $@"
+            SET NOCOUNT ON;
+            SET STATISTICS IO ON;
+            SET STATISTICS TIME ON;
+
+            {sqlQuery}
+
+            SET STATISTICS TIME OFF;
+            SET STATISTICS IO OFF;";
+
+                using (var cmd = new SqlCommand(wrapped, conn))
+                {
+                    cmd.ExecuteNonQuery(); // BUKAN ExecuteReader
+                }
+            }
+        }
+
+
 
         private void BtnLihatLaporan_Click(object sender, EventArgs e)
         {
@@ -58,7 +174,7 @@ namespace UCP1
             }
         }
 
-        private void FormTambahTransaksi_Load(object sender, EventArgs e)
+        private void Form1_Load(object sender, EventArgs e)
         {
             comboBox1.Items.Add("pemasukan");
             comboBox1.Items.Add("pengeluaran");
@@ -148,7 +264,6 @@ namespace UCP1
             ClearForm();
             TampilkanLaporan();
         }
-
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             try
@@ -335,5 +450,73 @@ namespace UCP1
             dateTimePicker1.Value = DateTime.Now;
             idEdit = -1;
         }
+
+        // Event untuk memilih file dan mempreview data
+        private void button3_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "Excel Files|*.xlsx;*.xlsm;";
+            if (openFileDialog.ShowDialog() == DialogResult.OK)
+            {
+                string filePath = openFileDialog.FileName;
+                PreviewData(filePath); // Display preview before importing
+            }
+        }
+
+        // Method untuk menampilkan preview data di DataGridView
+        private void PreviewData(string filePath)
+        {
+            try
+            {
+                using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read))
+                {
+                    IWorkbook workbook = new XSSFWorkbook(fs); // Membuka workbook Excel
+                    ISheet sheet = workbook.GetSheetAt(0);     // Mendapatkan worksheet pertama
+                    DataTable dt = new DataTable();
+
+                    // Membaca header kolom
+                    IRow headerRow = sheet.GetRow(0);
+                    foreach (var cell in headerRow.Cells)
+                    {
+                        dt.Columns.Add(cell.ToString());
+                    }
+
+                    // Membaca sisa data
+                    for (int i = 1; i <= sheet.LastRowNum; i++) // Lewati baris header
+                    {
+                        IRow dataRow = sheet.GetRow(i);
+                        DataRow newRow = dt.NewRow();
+                        int cellIndex = 0;
+                        foreach (var cell in dataRow.Cells)
+                        {
+                            newRow[cellIndex] = cell.ToString();
+                            cellIndex++;
+                        }
+                        dt.Rows.Add(newRow);
+                    }
+
+                    // Membuka PreviewForm dan mengirimkan DataTable ke form tersebut
+                    PreviewData previewForm = new PreviewData(dt);
+                    previewForm.ShowDialog(); // Tampilkan PreviewForm
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Error reading the Excel file: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnAnalyze_Click(object sender, EventArgs e)
+        {
+            string sqlQuery = "SELECT id_kategori, nama_kategori, tipe FROM dbo.kategori WHERE nama_kategori LIKE 'A%'";
+
+            AnalyzeQuery(sqlQuery); // Menampilkan statistik dari SQL Server
+
+            // Jika mau juga tampilkan hasil data:
+        }
+
+
+
+
     }
 }
