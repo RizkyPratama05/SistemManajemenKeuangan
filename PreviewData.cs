@@ -14,7 +14,7 @@ namespace UCP1
 {
     public partial class PreviewData : Form
     {
-        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=A4;Integrated Security=True";
+        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=SisTemManajemenKeuangan;Integrated Security=True";
         // Konstruktor menerima DataTable dan menampilkannya di DataGridView
         public PreviewData(DataTable data)
         {
@@ -64,8 +64,16 @@ namespace UCP1
                         {
                             cmd.Parameters.AddWithValue("@id_kategori", row["id_kategori"]);
                             cmd.Parameters.AddWithValue("@Jumlah", row["Jumlah"]);
-                            DateTime parsedDate = DateTime.ParseExact(row["Tanggal"].ToString(), "dd/MM/yyyy", CultureInfo.InvariantCulture);
-                            cmd.Parameters.AddWithValue("@tanggal", parsedDate);    
+                            string tanggalStr = row["Tanggal"].ToString().Trim();
+                            string[] formats = { "dd/MM/yyyy", "d/M/yyyy", "yyyy-MM-dd", "dd-MMM-yyyy" };
+
+                            if (!DateTime.TryParseExact(tanggalStr, formats, CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
+                            {
+                                throw new FormatException($"Format tanggal tidak dikenali: '{tanggalStr}'");
+                            }
+
+                            // hanya tanggal (jam diabaikan karena SQL tipe DATE)
+                            cmd.Parameters.AddWithValue("@tanggal", parsedDate.Date);   
                             cmd.Parameters.AddWithValue("@Keterangan", row["Keterangan"]);
                             cmd.ExecuteNonQuery();
                         }

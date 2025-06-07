@@ -39,7 +39,7 @@ namespace UCP1
             EnsureIndexes();
             LoadData();
         }
-
+        
         private void EnsureIndexes()
         {
             using (var conn = new SqlConnection(connectionString))
