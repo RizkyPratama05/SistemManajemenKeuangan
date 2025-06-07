@@ -14,6 +14,8 @@ namespace UCP1
     public partial class FormTambahTransaksi : Form
     {
         private int idEdit = -1;
+        private int idKategoriEdit = -1;
+
         private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=SisTemManajemenKeuangan;Integrated Security=True";
 
         private readonly MemoryCache _cache = MemoryCache.Default;
@@ -186,27 +188,24 @@ namespace UCP1
 
         private void btnSimpan_Click(object sender, EventArgs e)
         {
-            string nama = textBox1.Text;
-            string jumlahText = textBox2.Text.Trim(); 
+            string nama = textBox1.Text; // Ini adalah nama_kategori
+            string jumlahText = textBox2.Text.Trim();
             string keterangan = textBox3.Text;
             DateTime tanggal = dateTimePicker1.Value;
-            string tipe = comboBox1.SelectedItem.ToString();
+            string tipe = comboBox1.SelectedItem.ToString(); // Ini adalah tipe kategori
 
-            // Validasi nama: hanya huruf dan spasi
+            // ... (Validasi input Anda tetap di sini) ...
             if (string.IsNullOrWhiteSpace(nama) || !System.Text.RegularExpressions.Regex.IsMatch(nama, @"^[a-zA-Z\s]+$"))
             {
                 MessageBox.Show("Nama kategori harus terdiri dari huruf saja.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
-            // Validasi jumlah
             decimal jumlah;
             if (!decimal.TryParse(jumlahText, out jumlah) || jumlah <= 0)
             {
                 MessageBox.Show("Jumlah harus berupa angka yang lebih dari 0.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
-
             if (tanggal.Year < 2020)
             {
                 MessageBox.Show("Data hanya berlaku untuk tahun 2020 ke atas.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -214,110 +213,165 @@ namespace UCP1
             }
 
             var confirmSave = MessageBox.Show("Apakah Anda akan menyimpan data ini?",
-                                  "Konfirmasi Simpan",
-                                  MessageBoxButtons.YesNo,
-                                  MessageBoxIcon.Question);
-            if (confirmSave != DialogResult.Yes)
-                return;
-
+                                             "Konfirmasi Simpan", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (confirmSave != DialogResult.Yes) return;
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
                 conn.Open();
+                SqlTransaction sqlTransaction = conn.BeginTransaction(); // Mulai transaksi
 
-                if (idEdit == -1)
+                try
                 {
-                    string insertKategori = "INSERT INTO kategori (nama_kategori, tipe) VALUES (@nama, @tipe); SELECT SCOPE_IDENTITY();";
-                    SqlCommand cmdKategori = new SqlCommand(insertKategori, conn);
-                    cmdKategori.Parameters.AddWithValue("@nama", nama);
-                    cmdKategori.Parameters.AddWithValue("@tipe", tipe);
-                    int idKategori = Convert.ToInt32(cmdKategori.ExecuteScalar());
+                    if (idEdit == -1) // Mode Insert (Tambah Baru)
+                    {
+                        // Logika INSERT Anda yang sudah ada
+                        string insertKategori = "INSERT INTO kategori (nama_kategori, tipe) VALUES (@nama, @tipe); SELECT SCOPE_IDENTITY();";
+                        SqlCommand cmdKategori = new SqlCommand(insertKategori, conn, sqlTransaction);
+                        cmdKategori.Parameters.AddWithValue("@nama", nama);
+                        cmdKategori.Parameters.AddWithValue("@tipe", tipe);
+                        int idKategoriBaru = Convert.ToInt32(cmdKategori.ExecuteScalar());
 
-                    string insertTransaksi = "INSERT INTO transaksi (id_kategori, jumlah, tanggal, keterangan) VALUES (@id_kategori, @jumlah, @tanggal, @keterangan)";
-                    SqlCommand cmdTransaksi = new SqlCommand(insertTransaksi, conn);
-                    cmdTransaksi.Parameters.AddWithValue("@id_kategori", idKategori);
-                    cmdTransaksi.Parameters.AddWithValue("@jumlah", jumlah);
-                    cmdTransaksi.Parameters.AddWithValue("@tanggal", tanggal);
-                    cmdTransaksi.Parameters.AddWithValue("@keterangan", keterangan);
-                    cmdTransaksi.ExecuteNonQuery();
+                        string insertTransaksi = "INSERT INTO transaksi (id_kategori, jumlah, tanggal, keterangan) VALUES (@id_kategori, @jumlah, @tanggal, @keterangan)";
+                        SqlCommand cmdTransaksi = new SqlCommand(insertTransaksi, conn, sqlTransaction);
+                        cmdTransaksi.Parameters.AddWithValue("@id_kategori", idKategoriBaru);
+                        cmdTransaksi.Parameters.AddWithValue("@jumlah", jumlah);
+                        cmdTransaksi.Parameters.AddWithValue("@tanggal", tanggal);
+                        cmdTransaksi.Parameters.AddWithValue("@keterangan", keterangan);
+                        cmdTransaksi.ExecuteNonQuery();
 
-                    MessageBox.Show("Transaksi berhasil ditambahkan.");
+                        MessageBox.Show("Transaksi berhasil ditambahkan.");
+                    }
+                    else // Mode Update
+                    {
+
+                        // 1. Update tabel kategori
+                        string updateKategoriQuery = "UPDATE kategori SET nama_kategori = @nama, tipe = @tipe WHERE id_kategori = @id_kategori_edit";
+                        SqlCommand cmdUpdateKategori = new SqlCommand(updateKategoriQuery, conn, sqlTransaction);
+                        cmdUpdateKategori.Parameters.AddWithValue("@nama", nama); // nama dari textBox1
+                        cmdUpdateKategori.Parameters.AddWithValue("@tipe", tipe); // tipe dari comboBox1
+                        cmdUpdateKategori.Parameters.AddWithValue("@id_kategori_edit", idKategoriEdit);
+                        MessageBox.Show($"UPDATE:\nID: {idKategoriEdit}\nNama: {nama}\nTipe: {tipe}");
+
+
+                        cmdUpdateKategori.ExecuteNonQuery();
+                        int kategoriUpdated = cmdUpdateKategori.ExecuteNonQuery();
+                        MessageBox.Show("Kategori rows updated: " + kategoriUpdated);
+
+
+                        // 2. Update tabel transaksi
+                        //    Catatan: id_kategori di tabel transaksi TIDAK diubah di sini,
+                        //    karena kita mengedit detail kategori yang sama.
+                        //    Jika Anda ingin transaksi ini dipindahkan ke kategori LAIN, logikanya akan berbeda.
+                        string updateTransaksiQuery = "UPDATE transaksi SET jumlah=@jumlah, tanggal=@tanggal, keterangan=@keterangan WHERE id_transaksi=@id_transaksi_edit";
+                        SqlCommand cmdUpdateTransaksi = new SqlCommand(updateTransaksiQuery, conn, sqlTransaction);
+                        cmdUpdateTransaksi.Parameters.AddWithValue("@jumlah", jumlah);
+                        cmdUpdateTransaksi.Parameters.AddWithValue("@tanggal", tanggal);
+                        cmdUpdateTransaksi.Parameters.AddWithValue("@keterangan", keterangan);
+                        cmdUpdateTransaksi.Parameters.AddWithValue("@id_transaksi_edit", idEdit); // idEdit adalah id_transaksi
+                        cmdUpdateTransaksi.ExecuteNonQuery();
+
+                        MessageBox.Show("Transaksi berhasil diupdate.");
+                    }
+
+                    sqlTransaction.Commit(); // Jika semua berhasil, commit transaksi
                 }
-                else
+                catch (Exception ex)
                 {
-
-                 
-
-                    string updateTransaksi = "UPDATE transaksi SET jumlah=@jumlah, tanggal=@tanggal, keterangan=@keterangan WHERE id_transaksi=@id";
-                    SqlCommand cmdUpdate = new SqlCommand(updateTransaksi, conn);
-                    cmdUpdate.Parameters.AddWithValue("@jumlah", jumlah);
-                    cmdUpdate.Parameters.AddWithValue("@tanggal", tanggal);
-                    cmdUpdate.Parameters.AddWithValue("@keterangan", keterangan);
-                    cmdUpdate.Parameters.AddWithValue("@id", idEdit);
-                    cmdUpdate.ExecuteNonQuery();
-
-                    MessageBox.Show("Transaksi berhasil diupdate.");
+                    sqlTransaction.Rollback(); // Jika ada error, batalkan semua perubahan
+                    MessageBox.Show($"Error saat menyimpan data: {ex.Message}", "Database Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+                finally // Pastikan idEdit dan idKategoriEdit direset setelah operasi
+                {
                     idEdit = -1;
+                    idKategoriEdit = -1;
                 }
             }
 
             ClearForm();
             TampilkanLaporan();
         }
+
         private void dataGridView1_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             try
             {
-                if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
+                if (e.RowIndex < 0 || e.ColumnIndex < 0) return; // Klik di header atau di luar batas
 
-                string columnName = dataGridView1.Columns[e.ColumnIndex].Name;
-                if (columnName != "Update" && columnName != "Delete") return;
+                DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
 
-                var idValue = dataGridView1.Rows[e.RowIndex].Cells["id_transaksi"].Value;
-                if (idValue == DBNull.Value || idValue == null || idValue.ToString() == "") return;
-
-                int idTransaksi = Convert.ToInt32(idValue);
-
-                if (columnName == "Update")
+                // Abaikan jika yang diklik adalah baris TOTAL
+                if (row.Cells["nama_kategori"].Value != null && row.Cells["nama_kategori"].Value.ToString() == "TOTAL")
                 {
+                    return;
+                }
 
-                    var confirmUpdate = MessageBox.Show("Apakah Anda yakin ingin mengupdate data ini?",
-                                       "Konfirmasi Update",
-                                       MessageBoxButtons.YesNo,
-                                       MessageBoxIcon.Question);
-                    if (confirmUpdate != DialogResult.Yes)
+
+                string clickedColumnName = dataGridView1.Columns[e.ColumnIndex].Name;
+
+                // Pastikan id_transaksi dan id_kategori ada dan valid sebelum melanjutkan
+                if (row.Cells["id_transaksi"].Value == DBNull.Value || row.Cells["id_transaksi"].Value == null) return;
+                int currentIdTransaksi = Convert.ToInt32(row.Cells["id_transaksi"].Value);
+
+
+                if (clickedColumnName == "Update")
+                {
+                    var confirmUpdate = MessageBox.Show("Apakah Anda yakin ingin mengisi form dengan data ini untuk diupdate?",
+                                                        "Konfirmasi Update", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+                    if (confirmUpdate != DialogResult.Yes) return;
+
+                    textBox1.Text = row.Cells["nama_kategori"].Value.ToString();
+                    comboBox1.SelectedItem = row.Cells["tipe"].Value.ToString();
+                    textBox2.Text = row.Cells["jumlah"].Value.ToString();
+                    textBox3.Text = row.Cells["keterangan"].Value.ToString();
+
+                    if (row.Cells["tanggal"].Value != DBNull.Value)
                     {
-                        return;
+                        dateTimePicker1.Value = Convert.ToDateTime(row.Cells["tanggal"].Value);
                     }
 
-                    textBox1.Text = dataGridView1.Rows[e.RowIndex].Cells["nama_kategori"].Value.ToString();
-                    comboBox1.SelectedItem = dataGridView1.Rows[e.RowIndex].Cells["tipe"].Value.ToString();
-                    textBox2.Text = dataGridView1.Rows[e.RowIndex].Cells["jumlah"].Value.ToString();
-                    textBox3.Text = dataGridView1.Rows[e.RowIndex].Cells["keterangan"].Value.ToString();
-                    idEdit = idTransaksi;
+                    idEdit = currentIdTransaksi;
+                    idKategoriEdit = Convert.ToInt32(row.Cells["id_kategori"].Value); // ✅ Ini bagian penting
+
+                    // ✅ Ini dia perbaikannya:
+                    if (row.Cells["id_kategori"].Value != DBNull.Value && row.Cells["id_kategori"].Value != null)
+                    {
+                        idKategoriEdit = Convert.ToInt32(row.Cells["id_kategori"].Value);
+                    }
+                    else
+                    {
+                        idKategoriEdit = -1; // fallback
+                    }
                 }
-                else if (columnName == "Delete")
+
+                else if (clickedColumnName == "Delete")
                 {
-                    var confirm = MessageBox.Show("Yakin ingin menghapus transaksi ini?", "Konfirmasi", MessageBoxButtons.YesNo);
-                    if (confirm == DialogResult.Yes)
+                    var confirmDelete = MessageBox.Show("Yakin ingin menghapus transaksi ini?", "Konfirmasi Hapus", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                    if (confirmDelete == DialogResult.Yes)
                     {
                         using (SqlConnection conn = new SqlConnection(connectionString))
                         {
                             conn.Open();
+                            // Pertimbangkan menggunakan SqlTransaction jika proses delete melibatkan banyak tabel atau ada trigger kompleks
                             SqlCommand cmd = new SqlCommand("DELETE FROM transaksi WHERE id_transaksi = @id", conn);
-                            cmd.Parameters.AddWithValue("@id", idTransaksi);
+                            cmd.Parameters.AddWithValue("@id", currentIdTransaksi);
                             cmd.ExecuteNonQuery();
-                            MessageBox.Show("Transaksi berhasil dihapus.");
-                            TampilkanLaporan();
+                            MessageBox.Show("Transaksi berhasil dihapus.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            TampilkanLaporan(); // Refresh data di grid
+                            ClearForm();      // Bersihkan form jika data yang sama sedang diedit
                         }
                     }
                 }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}\n\nDetail: {ex.StackTrace}");
+                MessageBox.Show($"Error pada operasi DataGridView: {ex.Message}\n\nStackTrace: {ex.StackTrace}", "Error Grid", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // Saat error, pastikan ID reset agar tidak terjadi update/insert yang salah
+                idEdit = -1;
+                idKategoriEdit = -1;
             }
         }
+
 
         private void TampilkanLaporan()
         {
@@ -326,10 +380,11 @@ namespace UCP1
                 using (SqlConnection conn = new SqlConnection(connectionString))
                 {
                     conn.Open();
-                    string query = @"SELECT id_transaksi, nama_kategori, tipe, jumlah, 
-                                   CONVERT(varchar, tanggal, 103) as tanggal, keterangan 
-                                   FROM view_transaksi_lengkap 
-                                   ORDER BY tanggal DESC";
+                    string query = @"SELECT id_transaksi, id_kategori, nama_kategori, tipe, jumlah, 
+                 CONVERT(varchar, tanggal, 103) as tanggal, keterangan 
+                 FROM view_transaksi_lengkap 
+                 ORDER BY tanggal DESC";
+
 
                     SqlDataAdapter adapter = new SqlDataAdapter(query, conn);
                     DataTable dt = new DataTable();
@@ -363,45 +418,46 @@ namespace UCP1
 
         private void SetupDataGridView(DataTable dt)
         {
+            dataGridView1.DataSource = null; // Hapus source lama
+            dataGridView1.Columns.Clear();   // Hapus kolom lama
+            dataGridView1.AutoGenerateColumns = false; // Nonaktifkan pembuatan kolom otomatis
 
-            dataGridView1.DataSource = null;
-            dataGridView1.Columns.Clear();
-            dataGridView1.AutoGenerateColumns = false;
-
-
-            AddColumn("id_transaksi", "ID", false);
+            // Definisikan Kolom Data (sesuaikan DataPropertyName dengan nama kolom di DataTable/View)
+            AddColumn("id_transaksi", "ID Transaksi", false); // Kolom ID biasanya disembunyikan
+            AddColumn("id_kategori", "ID Kategori", false);  // Kolom ID Kategori juga disembunyikan
             AddColumn("nama_kategori", "Kategori");
             AddColumn("tipe", "Jenis");
-            AddColumn("jumlah", "Jumlah", true, "N0", DataGridViewContentAlignment.MiddleRight);
-            AddColumn("tanggal", "Tanggal");
+            AddColumn("jumlah", "Jumlah", true, "N0", DataGridViewContentAlignment.MiddleRight); // Format angka
+            AddColumn("tanggal", "Tanggal", true, "dd/MM/yyyy"); // Format tanggal, pastikan tipe data di DataTable sesuai
             AddColumn("keterangan", "Keterangan");
 
-
+            // Definisikan Kolom Tombol Aksi
             AddButtonColumn("Update", "Update", Color.LightBlue);
             AddButtonColumn("Delete", "Delete", Color.LightCoral);
 
-
-            dataGridView1.DataSource = dt;
-
+            dataGridView1.DataSource = dt; // Set source data baru
 
             FormatGridAppearance();
         }
 
-        private void AddColumn(string name, string headerText, bool visible = true,
-                             string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleLeft)
+
+        private void AddColumn(string dataPropertyName, string headerText, bool visible = true,
+                               string format = null, DataGridViewContentAlignment alignment = DataGridViewContentAlignment.MiddleLeft)
         {
             var col = new DataGridViewTextBoxColumn
             {
-                Name = name,
-                DataPropertyName = name,
+                Name = dataPropertyName, // Name bisa sama dengan DataPropertyName agar mudah diakses
+                DataPropertyName = dataPropertyName,
                 HeaderText = headerText,
                 Visible = visible,
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.DisplayedCells, // Ukuran kolom
                 DefaultCellStyle = new DataGridViewCellStyle { Alignment = alignment }
             };
 
             if (!string.IsNullOrEmpty(format))
+            {
                 col.DefaultCellStyle.Format = format;
-
+            }
             dataGridView1.Columns.Add(col);
         }
 
@@ -412,14 +468,16 @@ namespace UCP1
                 Name = name,
                 Text = text,
                 HeaderText = "Aksi",
-                UseColumnTextForButtonValue = true,
+                UseColumnTextForButtonValue = true, // Tombol akan menampilkan Text di atas
                 FlatStyle = FlatStyle.Flat,
                 DefaultCellStyle = new DataGridViewCellStyle
                 {
                     BackColor = backColor,
-                    ForeColor = Color.Black,
-                    Alignment = DataGridViewContentAlignment.MiddleCenter
-                }
+                    ForeColor = Color.Black, // Warna teks tombol
+                    Alignment = DataGridViewContentAlignment.MiddleCenter,
+                    Padding = new Padding(2)
+                },
+                AutoSizeMode = DataGridViewAutoSizeColumnMode.AllCellsExceptHeader // Ukuran kolom tombol
             };
             dataGridView1.Columns.Add(btnCol);
         }
@@ -427,29 +485,43 @@ namespace UCP1
         private void FormatGridAppearance()
         {
             dataGridView1.ColumnHeadersDefaultCellStyle.Font = new Font("Arial", 9, FontStyle.Bold);
-            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.EnableHeadersVisualStyles = false; // Memungkinkan kustomisasi header
             dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = Color.LightGray;
-            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
-            dataGridView1.RowHeadersVisible = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = Color.Black;
+            dataGridView1.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill; // Sesuaikan ukuran kolom otomatis
+            dataGridView1.RowHeadersVisible = false; // Sembunyikan header baris
+            dataGridView1.AllowUserToAddRows = false; // Jangan biarkan user menambah baris langsung di grid
+            dataGridView1.AllowUserToDeleteRows = false; // Jangan biarkan user menghapus baris langsung di grid
+            dataGridView1.SelectionMode = DataGridViewSelectionMode.FullRowSelect; // Pilih seluruh baris
+            dataGridView1.MultiSelect = false; // Hanya satu baris yang bisa dipilih
 
-
+            // Format baris TOTAL jika ada
             if (dataGridView1.Rows.Count > 0)
             {
-                var lastRow = dataGridView1.Rows[dataGridView1.Rows.Count - 1];
-                lastRow.DefaultCellStyle.Font = new Font(dataGridView1.Font, FontStyle.Bold);
-                lastRow.DefaultCellStyle.BackColor = Color.LightGray;
+                DataGridViewRow lastRow = dataGridView1.Rows[dataGridView1.Rows.Count - 1];
+                if (lastRow.Cells["nama_kategori"].Value != null && lastRow.Cells["nama_kategori"].Value.ToString() == "TOTAL")
+                {
+                    lastRow.DefaultCellStyle.Font = new Font(dataGridView1.Font, FontStyle.Bold);
+                    lastRow.DefaultCellStyle.BackColor = Color.LightYellow; // Warna latar beda untuk total
+                    // Membuat kolom Update dan Delete tidak bisa diklik/kosong untuk baris TOTAL
+                    lastRow.Cells["Update"].Value = string.Empty;
+                    lastRow.Cells["Delete"].Value = string.Empty;
+                }
             }
         }
+
 
         private void ClearForm()
         {
             textBox1.Clear();
             textBox2.Clear();
             textBox3.Clear();
-            comboBox1.SelectedIndex = 0;
+            comboBox1.SelectedIndex = 0; // Atau -1 jika ingin kosong tanpa pilihan default
             dateTimePicker1.Value = DateTime.Now;
-            idEdit = -1;
-        }
+            idEdit = -1;        // Reset ID transaksi yang diedit
+            idKategoriEdit = -1; // Reset ID kategori yang diedit
+            textBox1.Focus();   // Fokuskan kembali ke input pertama
+        }
 
         // Event untuk memilih file dan mempreview data
         private void button3_Click(object sender, EventArgs e)
