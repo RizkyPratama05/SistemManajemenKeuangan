@@ -14,7 +14,7 @@ namespace UCP1
 {
     public partial class PreviewData : Form
     {
-        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=SisTemManajemenKeuangan;Integrated Security=True";
+        private string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
         // Konstruktor menerima DataTable dan menampilkannya di DataGridView
         public PreviewData(DataTable data)
         {

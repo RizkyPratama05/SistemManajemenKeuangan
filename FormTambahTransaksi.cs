@@ -16,7 +16,7 @@ namespace UCP1
         private int idEdit = -1;
         private int idKategoriEdit = -1;
 
-        private string connectionString = "Data Source=MSI\\RIZKYPP;Initial Catalog=SisTemManajemenKeuangan;Integrated Security=True";
+        private string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
 
         private readonly MemoryCache _cache = MemoryCache.Default;
         private readonly CacheItemPolicy _policy = new CacheItemPolicy
@@ -39,9 +39,29 @@ namespace UCP1
         private void FormTambahTransaksi_Load(object sender, EventArgs e)
         {
             EnsureIndexes();
-            LoadData();
+            LoadData(); // Memuat data awal untuk DataGridView
+
+            // Pindahkan isi dari Form1_Load ke sini:
+            comboBox1.Items.Add("pemasukan");
+            comboBox1.Items.Add("pengeluaran");
+            comboBox1.SelectedIndex = 0;
+            dateTimePicker1.MinDate = new DateTime(2020, 1, 1);
+
+            // Panggil TampilkanLaporan() di sini agar grid terisi saat form pertama kali dimuat
+            TampilkanLaporan();
         }
-        
+
+        // --- HAPUS method Form1_Load ini sepenuhnya setelah memindahkan isinya ---
+        // private void Form1_Load(object sender, EventArgs e)
+        // {
+        //     comboBox1.Items.Add("pemasukan");
+        //     comboBox1.Items.Add("pengeluaran");
+        //     comboBox1.SelectedIndex = 0;
+        //     dateTimePicker1.MinDate = new DateTime(2020, 1, 1);
+        //
+        //     TampilkanLaporan();
+        // }
+
         private void EnsureIndexes()
         {
             using (var conn = new SqlConnection(connectionString))
