@@ -607,8 +607,10 @@ namespace UCP1
             // Jika mau juga tampilkan hasil data:
         }
 
-
-
-
+        private void btnReport_Click(object sender, EventArgs e)
+        {
+            FormReportExport fk = new FormReportExport();
+            fk.Show();
+        }
     }
 }

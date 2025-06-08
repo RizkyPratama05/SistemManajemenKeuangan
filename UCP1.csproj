@@ -153,6 +153,9 @@
       <DependentUpon>PreviewData.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
+    <Compile Include="ReportExportDataSet.cs">
+      <DependentUpon>ReportExportDataSet.xsd</DependentUpon>
+    </Compile>
     <Compile Include="ReportExportDataSet.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

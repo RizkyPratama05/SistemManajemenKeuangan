@@ -19,7 +19,7 @@ namespace UCP1
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new FormReportExport());
+            Application.Run(new FormTambahTransaksi());
         }
     }
 }

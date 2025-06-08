@@ -57,11 +57,10 @@ namespace UCP1
 
         }
 
-        private void reportViewer1_Load(object sender, EventArgs e)
-        {   
-            // Setup ReportViewer data
+        private void FormReportExport_Load(object sender, EventArgs e)
+        {
             SetupReportViewer();
-            // Refresh report to display data
         }
+
     }
 }
