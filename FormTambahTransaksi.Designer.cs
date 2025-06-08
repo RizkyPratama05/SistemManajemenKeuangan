@@ -1,4 +1,6 @@
-﻿namespace UCP1
+﻿using System;
+
+namespace UCP1
 {
     partial class FormTambahTransaksi
     {
@@ -18,6 +20,12 @@
                 components.Dispose();
             }
             base.Dispose(disposing);
+        }
+
+        private void BtnAnalyze_Click(object sender, EventArgs e)
+        {
+            string sqlQuery = "SELECT id_kategori, nama_kategori, tipe FROM dbo.kategori WHERE nama_kategori LIKE 'A%'";
+            AnalyzeQuery(sqlQuery);
         }
 
         #region Windows Form Designer generated code
