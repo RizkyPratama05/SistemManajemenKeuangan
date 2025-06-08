@@ -409,10 +409,10 @@ namespace UCP1
             }
         }
 
-        // --- Metode tidak terpakai/belum diimplementasikan, bisa dihapus atau dilengkapi nanti ---
-        private void PreviewData(string filePath) { MessageBox.Show("Fungsi import belum diimplementasikan."); }
-        private void button3_Click(object sender, EventArgs e) { PreviewData("path"); }
-        private void btnReport_Click(object sender, EventArgs e) { MessageBox.Show("Fungsi report terpisah belum diimplementasikan."); }
-
+        private void btnReport_Click(object sender, EventArgs e)
+        {
+            FormReportExport fk = new FormReportExport();
+            fk.Show();
+        }
     }
 }

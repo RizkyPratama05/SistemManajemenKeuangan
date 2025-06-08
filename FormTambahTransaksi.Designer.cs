@@ -46,6 +46,7 @@ namespace UCP1
             this.dtTanggal1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnExport = new System.Windows.Forms.Button();
             this.btnReport = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
@@ -53,7 +54,6 @@ namespace UCP1
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.btnExport = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -165,6 +165,16 @@ namespace UCP1
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Transaksi";
             // 
+            // btnExport
+            // 
+            this.btnExport.Location = new System.Drawing.Point(93, 623);
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(136, 33);
+            this.btnExport.TabIndex = 16;
+            this.btnExport.Text = "Export";
+            this.btnExport.UseVisualStyleBackColor = true;
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
+            // 
             // btnReport
             // 
             this.btnReport.Location = new System.Drawing.Point(93, 566);
@@ -195,7 +205,6 @@ namespace UCP1
             this.button3.TabIndex = 13;
             this.button3.Text = "Import Data";
             this.button3.UseVisualStyleBackColor = true;
-            this.button3.Click += new System.EventHandler(this.button3_Click);
             // 
             // button1
             // 
@@ -242,16 +251,6 @@ namespace UCP1
             this.dataGridView1.RowTemplate.Height = 24;
             this.dataGridView1.Size = new System.Drawing.Size(864, 641);
             this.dataGridView1.TabIndex = 0;
-            // 
-            // btnExport
-            // 
-            this.btnExport.Location = new System.Drawing.Point(93, 623);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(136, 33);
-            this.btnExport.TabIndex = 16;
-            this.btnExport.Text = "Export";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // FormTambahTransaksi
             // 
