@@ -38,13 +38,14 @@
             this.dtTanggal1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
+            this.btnReport = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
             this.button3 = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.dataGridView1 = new System.Windows.Forms.DataGridView();
-            this.btnReport = new System.Windows.Forms.Button();
+            this.btnExport = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
@@ -53,7 +54,7 @@
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(126, 94);
+            this.label1.Location = new System.Drawing.Point(35, 59);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(51, 20);
             this.label1.TabIndex = 0;
@@ -61,7 +62,7 @@
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(72, 118);
+            this.textBox1.Location = new System.Drawing.Point(131, 59);
             this.textBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(157, 26);
@@ -69,7 +70,7 @@
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(72, 191);
+            this.textBox2.Location = new System.Drawing.Point(131, 116);
             this.textBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textBox2.Name = "textBox2";
             this.textBox2.Size = new System.Drawing.Size(157, 26);
@@ -78,7 +79,7 @@
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(126, 168);
+            this.label2.Location = new System.Drawing.Point(35, 116);
             this.label2.Name = "label2";
             this.label2.Size = new System.Drawing.Size(60, 20);
             this.label2.TabIndex = 2;
@@ -86,7 +87,7 @@
             // 
             // textBox3
             // 
-            this.textBox3.Location = new System.Drawing.Point(72, 262);
+            this.textBox3.Location = new System.Drawing.Point(131, 179);
             this.textBox3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.textBox3.Name = "textBox3";
             this.textBox3.Size = new System.Drawing.Size(157, 26);
@@ -95,7 +96,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(111, 239);
+            this.label3.Location = new System.Drawing.Point(35, 182);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(92, 20);
             this.label3.TabIndex = 4;
@@ -103,7 +104,7 @@
             // 
             // dateTimePicker1
             // 
-            this.dateTimePicker1.Location = new System.Drawing.Point(39, 335);
+            this.dateTimePicker1.Location = new System.Drawing.Point(53, 289);
             this.dateTimePicker1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.dateTimePicker1.Name = "dateTimePicker1";
             this.dateTimePicker1.Size = new System.Drawing.Size(224, 26);
@@ -112,7 +113,7 @@
             // dtTanggal1
             // 
             this.dtTanggal1.AutoSize = true;
-            this.dtTanggal1.Location = new System.Drawing.Point(117, 311);
+            this.dtTanggal1.Location = new System.Drawing.Point(127, 251);
             this.dtTanggal1.Name = "dtTanggal1";
             this.dtTanggal1.Size = new System.Drawing.Size(66, 20);
             this.dtTanggal1.TabIndex = 9;
@@ -124,7 +125,7 @@
             this.comboBox1.Items.AddRange(new object[] {
             "Pemasukan",
             "Pengeluaran"});
-            this.comboBox1.Location = new System.Drawing.Point(83, 396);
+            this.comboBox1.Location = new System.Drawing.Point(93, 356);
             this.comboBox1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.comboBox1.Name = "comboBox1";
             this.comboBox1.Size = new System.Drawing.Size(136, 28);
@@ -132,6 +133,7 @@
             // 
             // groupBox1
             // 
+            this.groupBox1.Controls.Add(this.btnExport);
             this.groupBox1.Controls.Add(this.btnReport);
             this.groupBox1.Controls.Add(this.button4);
             this.groupBox1.Controls.Add(this.button3);
@@ -155,9 +157,19 @@
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Transaksi";
             // 
+            // btnReport
+            // 
+            this.btnReport.Location = new System.Drawing.Point(93, 566);
+            this.btnReport.Name = "btnReport";
+            this.btnReport.Size = new System.Drawing.Size(136, 36);
+            this.btnReport.TabIndex = 15;
+            this.btnReport.Text = "Report";
+            this.btnReport.UseVisualStyleBackColor = true;
+            this.btnReport.Click += new System.EventHandler(this.btnReport_Click);
+            // 
             // button4
             // 
-            this.button4.Location = new System.Drawing.Point(83, 590);
+            this.button4.Location = new System.Drawing.Point(169, 507);
             this.button4.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button4.Name = "button4";
             this.button4.Size = new System.Drawing.Size(136, 34);
@@ -168,7 +180,7 @@
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(83, 549);
+            this.button3.Location = new System.Drawing.Point(169, 438);
             this.button3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(136, 34);
@@ -179,7 +191,7 @@
             // 
             // button1
             // 
-            this.button1.Location = new System.Drawing.Point(83, 506);
+            this.button1.Location = new System.Drawing.Point(17, 506);
             this.button1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button1.Name = "button1";
             this.button1.Size = new System.Drawing.Size(136, 35);
@@ -189,7 +201,7 @@
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(83, 464);
+            this.button2.Location = new System.Drawing.Point(17, 437);
             this.button2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(136, 35);
@@ -200,6 +212,7 @@
             // 
             // groupBox2
             // 
+            this.groupBox2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
             this.groupBox2.Controls.Add(this.dataGridView1);
             this.groupBox2.Location = new System.Drawing.Point(353, 15);
             this.groupBox2.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -212,6 +225,7 @@
             // 
             // dataGridView1
             // 
+            this.dataGridView1.BackgroundColor = System.Drawing.SystemColors.ButtonFace;
             this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dataGridView1.Location = new System.Drawing.Point(7, 26);
             this.dataGridView1.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
@@ -221,21 +235,21 @@
             this.dataGridView1.Size = new System.Drawing.Size(864, 641);
             this.dataGridView1.TabIndex = 0;
             // 
-            // btnReport
+            // btnExport
             // 
-            this.btnReport.Location = new System.Drawing.Point(83, 631);
-            this.btnReport.Name = "btnReport";
-            this.btnReport.Size = new System.Drawing.Size(136, 36);
-            this.btnReport.TabIndex = 15;
-            this.btnReport.Text = "Report";
-            this.btnReport.UseVisualStyleBackColor = true;
-            this.btnReport.Click += new System.EventHandler(this.btnReport_Click);
+            this.btnExport.Location = new System.Drawing.Point(93, 623);
+            this.btnExport.Name = "btnExport";
+            this.btnExport.Size = new System.Drawing.Size(136, 33);
+            this.btnExport.TabIndex = 16;
+            this.btnExport.Text = "Export";
+            this.btnExport.UseVisualStyleBackColor = true;
+            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
             // 
             // FormTambahTransaksi
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.BackColor = System.Drawing.Color.SlateGray;
+            this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(192)))), ((int)(((byte)(128)))));
             this.ClientSize = new System.Drawing.Size(1236, 726);
             this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
@@ -269,5 +283,6 @@
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button btnReport;
+        private System.Windows.Forms.Button btnExport;
     }
 }
