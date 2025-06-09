@@ -46,10 +46,9 @@ namespace UCP1
             this.dtTanggal1 = new System.Windows.Forms.Label();
             this.comboBox1 = new System.Windows.Forms.ComboBox();
             this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.btnExport = new System.Windows.Forms.Button();
             this.btnReport = new System.Windows.Forms.Button();
             this.button4 = new System.Windows.Forms.Button();
-            this.button3 = new System.Windows.Forms.Button();
+            this.btnImportData = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.button2 = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
@@ -141,10 +140,9 @@ namespace UCP1
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.btnExport);
             this.groupBox1.Controls.Add(this.btnReport);
             this.groupBox1.Controls.Add(this.button4);
-            this.groupBox1.Controls.Add(this.button3);
+            this.groupBox1.Controls.Add(this.btnImportData);
             this.groupBox1.Controls.Add(this.button1);
             this.groupBox1.Controls.Add(this.button2);
             this.groupBox1.Controls.Add(this.textBox3);
@@ -165,19 +163,9 @@ namespace UCP1
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Transaksi";
             // 
-            // btnExport
-            // 
-            this.btnExport.Location = new System.Drawing.Point(93, 623);
-            this.btnExport.Name = "btnExport";
-            this.btnExport.Size = new System.Drawing.Size(136, 33);
-            this.btnExport.TabIndex = 16;
-            this.btnExport.Text = "Export";
-            this.btnExport.UseVisualStyleBackColor = true;
-            this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
-            // 
             // btnReport
             // 
-            this.btnReport.Location = new System.Drawing.Point(93, 566);
+            this.btnReport.Location = new System.Drawing.Point(93, 563);
             this.btnReport.Name = "btnReport";
             this.btnReport.Size = new System.Drawing.Size(136, 36);
             this.btnReport.TabIndex = 15;
@@ -196,15 +184,16 @@ namespace UCP1
             this.button4.UseVisualStyleBackColor = true;
             this.button4.Click += new System.EventHandler(this.BtnAnalyze_Click);
             // 
-            // button3
+            // btnImportData
             // 
-            this.button3.Location = new System.Drawing.Point(169, 438);
-            this.button3.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
-            this.button3.Name = "button3";
-            this.button3.Size = new System.Drawing.Size(136, 34);
-            this.button3.TabIndex = 13;
-            this.button3.Text = "Import Data";
-            this.button3.UseVisualStyleBackColor = true;
+            this.btnImportData.Location = new System.Drawing.Point(169, 438);
+            this.btnImportData.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
+            this.btnImportData.Name = "btnImportData";
+            this.btnImportData.Size = new System.Drawing.Size(136, 34);
+            this.btnImportData.TabIndex = 13;
+            this.btnImportData.Text = "Import Data";
+            this.btnImportData.UseVisualStyleBackColor = true;
+            this.btnImportData.Click += new System.EventHandler(this.btnImportData_Click);
             // 
             // button1
             // 
@@ -287,9 +276,8 @@ namespace UCP1
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.Button button2;
         private System.Windows.Forms.Button button1;
-        private System.Windows.Forms.Button button3;
+        private System.Windows.Forms.Button btnImportData;
         private System.Windows.Forms.Button button4;
         private System.Windows.Forms.Button btnReport;
-        private System.Windows.Forms.Button btnExport;
     }
 }

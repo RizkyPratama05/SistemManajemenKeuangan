@@ -38,19 +38,18 @@ namespace UCP1
 
         private void FormTambahTransaksi_Load(object sender, EventArgs e)
         {
-            // PENTING: Anda harus memiliki tombol bernama btnExport di form designer Anda
-            // dan hubungkan event Click-nya ke btnExport_Click
-            // Contoh: this.btnExport.Click += new System.EventHandler(this.btnExport_Click);
-
             EnsureIndexes();
             LoadData(); // Memuat data awal untuk DataGridView
 
+            // Pindahkan isi dari Form1_Load ke sini:
             comboBox1.Items.Add("pemasukan");
             comboBox1.Items.Add("pengeluaran");
             comboBox1.SelectedIndex = 0;
             dateTimePicker1.MinDate = new DateTime(2020, 1, 1);
+            // Baris ini sudah benar, untuk membatasi pilihan di kalender
             dateTimePicker1.MaxDate = DateTime.Now;
 
+            // Panggil TampilkanLaporan() di sini agar grid terisi saat form pertama kali dimuat
             TampilkanLaporan();
         }
 
@@ -73,8 +72,6 @@ namespace UCP1
 
         private void LoadData()
         {
-            // Fungsi ini sepertinya hanya untuk tes caching awal, tidak mempengaruhi laporan utama
-            // jadi kita biarkan saja.
             DataTable dt;
             if (_cache.Contains(CacheKey))
             {
@@ -120,6 +117,15 @@ namespace UCP1
             string keterangan = textBox3.Text.Trim();
             DateTime tanggal = dateTimePicker1.Value;
             string tipe = comboBox1.SelectedItem.ToString();
+
+            // --- BLOK VALIDASI TANGGAL YANG DITAMBAHKAN ---
+            // Memastikan tanggal yang diinput tidak melebihi tanggal hari ini
+            if (tanggal.Date > DateTime.Now.Date)
+            {
+                MessageBox.Show("Tanggal transaksi tidak boleh melebihi tanggal hari ini.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // Menghentikan proses penyimpanan jika tanggal tidak valid
+            }
+            // ---------------------------------------------
 
             if (string.IsNullOrWhiteSpace(nama) || !System.Text.RegularExpressions.Regex.IsMatch(nama, @"^[a-zA-Z\s]+$"))
             {
@@ -196,7 +202,6 @@ namespace UCP1
                 if (e.RowIndex < 0 || e.ColumnIndex < 0) return;
                 DataGridViewRow row = dataGridView1.Rows[e.RowIndex];
 
-                // PERBAIKAN 1: Menyeragamkan pengecekan baris total
                 if (row.Cells["nama_kategori"].Value?.ToString() == "SALDO AKHIR") return;
 
                 string clickedColumnName = dataGridView1.Columns[e.ColumnIndex].Name;
@@ -231,7 +236,7 @@ namespace UCP1
                             cmd.Parameters.AddWithValue("@id", currentIdTransaksi);
                             cmd.ExecuteNonQuery();
                             MessageBox.Show("Transaksi berhasil dihapus.", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                            TampilkanLaporan(); // Ini akan memuat ulang data dan menghitung ulang total
+                            TampilkanLaporan();
                             ClearForm();
                         }
                     }
@@ -321,7 +326,6 @@ namespace UCP1
             if (dataGridView1.Rows.Count > 0)
             {
                 DataGridViewRow lastRow = dataGridView1.Rows[dataGridView1.Rows.Count - 1];
-                // PERBAIKAN 2: Menyeragamkan pengecekan baris total
                 if (lastRow.Cells["nama_kategori"].Value?.ToString() == "SALDO AKHIR")
                 {
                     lastRow.DefaultCellStyle.Font = new Font(dataGridView1.Font, FontStyle.Bold);
@@ -346,9 +350,6 @@ namespace UCP1
 
         private void btnExport_Click(object sender, EventArgs e)
         {
-            // PERBAIKAN 3: SOLUSI FINAL UNTUK MASALAH EKSPOR
-            // Menambahkan instruksi ini untuk memaksa .NET menggunakan mode yang kompatibel
-            // dalam menangani font, yang dapat mencegah error 'Access Denied'.
             AppContext.SetSwitch("System.Drawing.EnableUnixSupport", true);
 
             if (dataGridView1.Rows.Count == 0)
@@ -405,6 +406,103 @@ namespace UCP1
                     {
                         MessageBox.Show($"Terjadi error saat mengekspor data.\n\nDETAIL ERROR:\n{ex.ToString()}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
+                }
+            }
+        }
+
+        private void btnImportData_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog() { Filter = "Excel Workbook|*.xlsx", ValidateNames = true })
+            {
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    IWorkbook workbook;
+                    using (FileStream fs = new FileStream(ofd.FileName, FileMode.Open, FileAccess.Read))
+                    {
+                        workbook = new XSSFWorkbook(fs);
+                    }
+
+                    ISheet sheet = workbook.GetSheetAt(0);
+                    int berhasil = 0;
+                    int gagal = 0;
+
+                    using (SqlConnection conn = new SqlConnection(connectionString))
+                    {
+                        conn.Open();
+                        SqlTransaction transaction = conn.BeginTransaction();
+
+                        try
+                        {
+                            for (int i = 1; i <= sheet.LastRowNum; i++)
+                            {
+                                IRow row = sheet.GetRow(i);
+                                if (row == null) continue;
+
+                                try
+                                {
+                                    string namaKategori = row.GetCell(0)?.ToString().Trim();
+                                    string tipe = row.GetCell(1)?.ToString().Trim().ToLower();
+                                    string jumlahStr = row.GetCell(2)?.ToString().Trim();
+                                    string tanggalStr = row.GetCell(3)?.ToString().Trim();
+                                    string keterangan = row.GetCell(4)?.ToString().Trim() ?? "";
+
+                                    if (string.IsNullOrWhiteSpace(namaKategori) ||
+                                        (tipe != "pemasukan" && tipe != "pengeluaran") ||
+                                        !decimal.TryParse(jumlahStr, out decimal jumlah) ||
+                                        !DateTime.TryParse(tanggalStr, out DateTime tanggal))
+                                    {
+                                        gagal++;
+                                        continue;
+                                    }
+
+                                    int idKategori;
+                                    string checkKategoriQuery = "SELECT id_kategori FROM kategori WHERE nama_kategori = @nama AND tipe = @tipe";
+                                    SqlCommand cmdCheck = new SqlCommand(checkKategoriQuery, conn, transaction);
+                                    cmdCheck.Parameters.AddWithValue("@nama", namaKategori);
+                                    cmdCheck.Parameters.AddWithValue("@tipe", tipe);
+
+                                    object result = cmdCheck.ExecuteScalar();
+
+                                    if (result != null)
+                                    {
+                                        idKategori = Convert.ToInt32(result);
+                                    }
+                                    else
+                                    {
+                                        string insertKategoriQuery = "INSERT INTO kategori (nama_kategori, tipe) VALUES (@nama, @tipe); SELECT SCOPE_IDENTITY();";
+                                        SqlCommand cmdInsertKategori = new SqlCommand(insertKategoriQuery, conn, transaction);
+                                        cmdInsertKategori.Parameters.AddWithValue("@nama", namaKategori);
+                                        cmdInsertKategori.Parameters.AddWithValue("@tipe", tipe);
+                                        idKategori = Convert.ToInt32(cmdInsertKategori.ExecuteScalar());
+                                    }
+
+                                    string insertTransaksiQuery = "INSERT INTO transaksi (id_kategori, jumlah, tanggal, keterangan) VALUES (@id_kategori, @jumlah, @tanggal, @keterangan)";
+                                    SqlCommand cmdInsertTransaksi = new SqlCommand(insertTransaksiQuery, conn, transaction);
+                                    cmdInsertTransaksi.Parameters.AddWithValue("@id_kategori", idKategori);
+                                    cmdInsertTransaksi.Parameters.AddWithValue("@jumlah", jumlah);
+                                    cmdInsertTransaksi.Parameters.AddWithValue("@tanggal", tanggal);
+                                    cmdInsertTransaksi.Parameters.AddWithValue("@keterangan", keterangan);
+
+                                    cmdInsertTransaksi.ExecuteNonQuery();
+                                    berhasil++;
+                                }
+                                catch
+                                {
+                                    gagal++;
+                                }
+                            }
+
+                            transaction.Commit();
+                            MessageBox.Show($"Impor Selesai.\n\nBerhasil: {berhasil} baris\nGagal: {gagal} baris", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                        }
+                        catch (Exception ex)
+                        {
+                            transaction.Rollback();
+                            MessageBox.Show($"Terjadi error saat impor data. Semua perubahan dibatalkan.\n\nDETAIL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+
+                    TampilkanLaporan();
                 }
             }
         }
