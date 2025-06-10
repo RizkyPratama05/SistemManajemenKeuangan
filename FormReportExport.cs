@@ -52,7 +52,7 @@ namespace UCP1
             ReportDataSource rds = new ReportDataSource("DataSet1", dt);
             reportViewer1.LocalReport.DataSources.Clear();
             reportViewer1.LocalReport.DataSources.Add(rds);
-            reportViewer1.LocalReport.ReportEmbeddedResource = "UCP1.KeuanganReport.rdlc"; // atau ReportPath sementara
+            reportViewer1.LocalReport.ReportPath = @"D:\SEMESTER 4\PABD\CLONE\KeuanganReport.rdlc"; // atau ReportPath sementara
             reportViewer1.RefreshReport();
 
         }
