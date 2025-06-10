@@ -406,7 +406,9 @@
                           <TextRuns>
                             <TextRun>
                               <Value>=Fields!tanggal.Value</Value>
-                              <Style />
+                              <Style>
+                                <Format>d</Format>
+                              </Style>
                             </TextRun>
                           </TextRuns>
                           <Style />

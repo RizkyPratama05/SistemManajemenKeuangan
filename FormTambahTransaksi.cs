@@ -22,7 +22,6 @@ namespace UCP1
 
         private readonly string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
 
-
         private readonly MemoryCache _cache = MemoryCache.Default;
         private readonly CacheItemPolicy _policy = new CacheItemPolicy
         {
@@ -153,6 +152,24 @@ namespace UCP1
                 MessageBox.Show("Jumlah harus berupa angka yang lebih dari 0.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
+
+            // --- AWAL DARI BLOK VALIDASI TAMBAH/UPDATE ---
+            DialogResult a;
+            if (idEdit == -1) // Mode Insert
+            {
+                a = MessageBox.Show("Apakah Anda yakin ingin menambahkan data ini?", "Konfirmasi Tambah Data", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            }
+            else // Mode Update
+            {
+                a = MessageBox.Show("Apakah Anda yakin ingin memperbarui data ini?", "Konfirmasi Update Data", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            }
+
+            if (a == DialogResult.No)
+            {
+                return; // Jika pengguna memilih 'No', batalkan operasi
+            }
+            // --- AKHIR DARI BLOK VALIDASI TAMBAH/UPDATE ---
+
 
             using (SqlConnection conn = new SqlConnection(connectionString))
             {
