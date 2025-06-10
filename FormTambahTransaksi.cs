@@ -8,6 +8,10 @@ using System.IO;
 using System.Windows.Forms;
 using System.Runtime.Caching;
 using System.Diagnostics;
+using MathNet.Numerics;
+using NPOI.POIFS.Crypt.Dsig;
+using NPOI.SS.Formula.Functions;
+using static NPOI.SS.Formula.PTG.ArrayPtg;
 
 namespace UCP1
 {
@@ -17,6 +21,7 @@ namespace UCP1
         private int idKategoriEdit = -1;
 
         private readonly string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
+
 
         private readonly MemoryCache _cache = MemoryCache.Default;
         private readonly CacheItemPolicy _policy = new CacheItemPolicy
@@ -45,8 +50,7 @@ namespace UCP1
             comboBox1.Items.Add("pemasukan");
             comboBox1.Items.Add("pengeluaran");
             comboBox1.SelectedIndex = 0;
-            dateTimePicker1.MinDate = new DateTime(2020, 1, 1);
-            // Baris ini sudah benar, untuk membatasi pilihan di kalender
+            dateTimePicker1.MinDate = DateTime.Now.AddYears(-5);
             dateTimePicker1.MaxDate = DateTime.Now;
 
             // Panggil TampilkanLaporan() di sini agar grid terisi saat form pertama kali dimuat
@@ -118,14 +122,26 @@ namespace UCP1
             DateTime tanggal = dateTimePicker1.Value;
             string tipe = comboBox1.SelectedItem.ToString();
 
-            // --- BLOK VALIDASI TANGGAL YANG DITAMBAHKAN ---
-            // Memastikan tanggal yang diinput tidak melebihi tanggal hari ini
+            // --- INI BAGIAN PALING PENTING UNTUK MEMBLOKIR TANGGAL LAMA ---
+            // 1. Tentukan batas tanggal paling lama yang diizinkan (5 tahun dari sekarang)
+            DateTime batasTanggalMundur = DateTime.Now.AddYears(-5);
+
+            // 2. Cek apakah tanggal yang diinput kurang dari batas tersebut
+            if (tanggal.Date < batasTanggalMundur.Date)
+            {
+                // 3. Jika ya, tampilkan notifikasi dan hentikan proses dengan 'return'
+                MessageBox.Show("Tanggal transaksi tidak boleh kurang dari 5 tahun terakhir.", "Tanggal Tidak Valid", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // PENTING: Menghentikan eksekusi, jadi tidak akan menyimpan data.
+            }
+
+            // 4. Cek juga agar tanggal tidak di masa depan
             if (tanggal.Date > DateTime.Now.Date)
             {
-                MessageBox.Show("Tanggal transaksi tidak boleh melebihi tanggal hari ini.", "Validasi Error", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return; // Menghentikan proses penyimpanan jika tanggal tidak valid
+                MessageBox.Show("Tanggal transaksi tidak boleh melebihi tanggal hari ini.", "Tanggal Tidak Valid", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // PENTING: Menghentikan eksekusi.
             }
-            // ---------------------------------------------
+            // --- AKHIR DARI BLOK VALIDASI TANGGAL ---
+
 
             if (string.IsNullOrWhiteSpace(nama) || !System.Text.RegularExpressions.Regex.IsMatch(nama, @"^[a-zA-Z\s]+$"))
             {
