@@ -16,7 +16,7 @@ namespace UCP1
             try
             {
                 string LocalIP = GetLocalIPAddress(); //mendeklarasikan ipaddress
-                connectStr = $"Server={LocalIP};Initial Catalog=OrganisasiMahasiswa;" +
+                connectStr = $"Server={LocalIP};Initial Catalog=KOAT;" +
                              $"Integrated Security=True;";
 
                 return connectStr;

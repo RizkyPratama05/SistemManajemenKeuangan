@@ -30,7 +30,6 @@ using System.Collections.Generic;
 
 using System.Text.RegularExpressions;
 using System.Linq;
-using System.Drawing;
 
 
 
@@ -51,7 +50,7 @@ namespace UCP1
 
 
 
-        private readonly string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
+   
 
 
 
@@ -120,7 +119,7 @@ namespace UCP1
 
         {
 
-            using (var conn = new SqlConnection(connectionString))
+            using (var conn = new SqlConnection(kn.connectionString()))
 
             {
 
@@ -167,7 +166,7 @@ namespace UCP1
 
         {
 
-            using (var conn = new SqlConnection(connectionString))
+            using (var conn = new SqlConnection(kn.connectionString()))
 
             {
 
@@ -258,7 +257,7 @@ namespace UCP1
 
             if (a == DialogResult.No) return;
 
-            using (SqlConnection conn = new SqlConnection(connectionString))
+            using (SqlConnection conn = new SqlConnection(kn.connectionString()))
             {
                 conn.Open();
                 SqlTransaction sqlTransaction = conn.BeginTransaction();
@@ -409,7 +408,7 @@ namespace UCP1
                     var confirmDelete = MessageBox.Show("Yakin ingin menghapus transaksi ini?", "Konfirmasi Hapus", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
                     if (confirmDelete == DialogResult.Yes)
                     {
-                        using (SqlConnection conn = new SqlConnection(connectionString))
+                        using (SqlConnection conn = new SqlConnection(kn.connectionString()))
                         {
                             conn.Open();
                             SqlCommand cmd = new SqlCommand("DELETE FROM transaksi WHERE id_transaksi = @id", conn);
@@ -448,7 +447,7 @@ namespace UCP1
         {
             try
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(kn.connectionString()))
                 {
                     conn.Open();
 
@@ -566,7 +565,7 @@ namespace UCP1
 
             if (result == DialogResult.Yes)
             {
-                using (SqlConnection conn = new SqlConnection(connectionString))
+                using (SqlConnection conn = new SqlConnection(kn.connectionString()))
                 {
                     conn.Open();
                     SqlTransaction tr = conn.BeginTransaction();
@@ -859,7 +858,7 @@ namespace UCP1
                     int berhasil = 0;
                     int gagal = 0;
 
-                    using (SqlConnection conn = new SqlConnection(connectionString))
+                    using (SqlConnection conn = new SqlConnection(kn.connectionString()))
                     {
                         conn.Open();
                         SqlTransaction transaction = conn.BeginTransaction();
