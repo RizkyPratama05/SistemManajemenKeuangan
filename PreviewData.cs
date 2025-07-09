@@ -14,6 +14,8 @@ namespace UCP1
 {
     public partial class PreviewData : Form
     {
+        Koneksi kn = new Koneksi();
+       
         private string connectionString = "Data Source=PACARWELLY\\AULIANURFITRIA;Initial Catalog=KOAT;Integrated Security=True";
         // Konstruktor menerima DataTable dan menampilkannya di DataGridView
         public PreviewData(DataTable data)
@@ -90,7 +92,10 @@ namespace UCP1
             }
         }
 
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
 
+        }
     }
 
 }

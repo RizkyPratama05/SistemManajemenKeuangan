@@ -43,7 +43,7 @@ namespace UCP1
     {
         Koneksi kn = new Koneksi();
         string strKonek = "";
-
+        
         private int idEdit = -1;
 
         private int idKategoriEdit = -1;
@@ -858,6 +858,9 @@ namespace UCP1
                     int berhasil = 0;
                     int gagal = 0;
 
+                    Stopwatch stopwatch = new Stopwatch(); // Inisialisasi Stopwatch
+                    stopwatch.Start(); // Mulai Stopwatch
+
                     using (SqlConnection conn = new SqlConnection(kn.connectionString()))
                     {
                         conn.Open();
@@ -942,13 +945,15 @@ namespace UCP1
                             }
 
                             transaction.Commit();
-                            MessageBox.Show($"Impor Selesai.\n\nBerhasil: {berhasil} baris\nGagal: {gagal} baris", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                            stopwatch.Stop(); // Hentikan Stopwatch
+                            MessageBox.Show($"Impor Selesai.\n\nBerhasil: {berhasil} baris\nGagal: {gagal} baris\nWaktu Impor: {stopwatch.Elapsed.TotalSeconds:F2} detik", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
                         }
 
                         catch (Exception ex)
                         {
+                            stopwatch.Stop(); // Hentikan Stopwatch juga jika terjadi error
                             transaction.Rollback();
-                            MessageBox.Show($"Terjadi error saat impor data. Semua perubahan dibatalkan.\n\nDETAIL: {ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show($"Terjadi error saat impor data. Semua perubahan dibatalkan.\n\nDETAIL: {ex.Message}\nWaktu Impor: {stopwatch.Elapsed.TotalSeconds:F2} detik", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
 
@@ -956,6 +961,7 @@ namespace UCP1
                 }
             }
         }
+
 
 
 
@@ -981,6 +987,10 @@ namespace UCP1
             grafik.Show(); // Gunakan .ShowDialog() jika ingin form modal
         }
 
+        private void dataGridView1_CellContentClick(object sender, DataGridViewCellEventArgs e)
+        {
+
+        }
     }
 
 }

@@ -17,7 +17,10 @@ namespace UCP1
             {
                 string LocalIP = GetLocalIPAddress(); //mendeklarasikan ipaddress
                 connectStr = $"Server={LocalIP};Initial Catalog=KOAT;" +
-                             $"Integrated Security=True;";
+                    $"Integrated Security=True;";
+                //Data Source = SERVERNAME; Initial Catalog = DatabaseName; User ID = sa; Password = password;
+
+                //$"Integrated Security=True;";
 
                 return connectStr;
             }
